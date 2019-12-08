@@ -8,6 +8,10 @@ namespace ImmoReader
 {
     interface IParser
     {
-        string Parse(IDocument document);
+        string Parse(IDocument document, out int count);
+
+        int GetCount(IDocument document);
+
+        string Type { get; }
     }
 }

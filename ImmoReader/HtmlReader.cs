@@ -23,10 +23,10 @@ namespace ImmoReader
             switch(immoPageType)
             {
                 case ImmoPageType.Immonet:
-                    this.parser = new ImmonetParser();
+                    this.parser = new ImmonetParser(this.dataPath);
                     break;
                 case ImmoPageType.Immoscout24:
-                    this.parser = new Immoscout24Parser();
+                    this.parser = new Immoscout24Parser(this.dataPath);
                     break;
                 default:
                     throw new ArgumentException($"Unknown type {immoPageType}");
@@ -38,11 +38,24 @@ namespace ImmoReader
             if(string.IsNullOrEmpty(url))
             { return; }
 
-            Console.WriteLine($"Reading {url}");
+            var document = await BrowsingContext.New(AngleSharp.Configuration.Default.WithDefaultLoader()).OpenAsync(url);
+            var totalCount = this.parser.GetCount(document);
+            var readCount = 0;
 
-            var context = BrowsingContext.New(AngleSharp.Configuration.Default.WithDefaultLoader());
-            var document = await context.OpenAsync(url);
-            await Read(this.parser.Parse(document)).ConfigureAwait(false);
+            Console.WriteLine($"Reading ~{totalCount} objects for {parser.Type}");
+            while (readCount < totalCount)
+            {
+                url = this.parser.Parse(document, out var count);
+                readCount += count;
+
+                if (string.IsNullOrEmpty(url))
+                {
+                    return;
+                }
+
+                document = await BrowsingContext.New(AngleSharp.Configuration.Default.WithDefaultLoader()).OpenAsync(url);
+            }
+            
         }
     }
 }
