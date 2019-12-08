@@ -30,7 +30,7 @@ namespace ImmoReader
 
         public int? Year { get; set; }
 
-        public decimal Distance { get; set; }
+        public decimal? Distance { get; set; }
 
         public string Location { get; set; }
 
