@@ -40,6 +40,8 @@ namespace ImmoReader
 
         public string Url { get; set; }
 
+        public string LocationUrl { get; set; }
+
         public IEnumerable<string> Tags { get; set; }
     }
 }

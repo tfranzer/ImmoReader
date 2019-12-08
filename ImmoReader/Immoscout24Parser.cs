@@ -2,6 +2,7 @@
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -104,6 +105,21 @@ namespace ImmoReader
 
         }
 
+        private JObject ReadJson(string content, string token)
+        {
+            try
+            {
+                var idx = content.IndexOf(token);
+                var idxStart = content.IndexOf('{', idx + token.Length);
+                var idxEnd = content.IndexOf('}', idx);
+                return (JObject)JsonConvert.DeserializeObject(content.Substring(idxStart, idxEnd - idxStart + 1));
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            
+        }
         private void ParseDetails(string detailsUrl, ImmoData data)
         {
             data.Url = detailsUrl;
@@ -127,12 +143,32 @@ namespace ImmoReader
             // Title
             data.Title = detailsDocument.QuerySelectorAll("h1").Where(div => div.Id == "expose-title").FirstOrDefault()?.Text().Trim();
 
-            
-            // broker TODO!
-            var contactBox = detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.Id == "is24-expose-contact-box").First();
-            data.Broker = contactBox.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.Dataset["qa"]=="contactName").FirstOrDefault()?.Text().Trim();
+            var fullText = detailsDocument.All[0].Text();
 
-            data.BrokerFirm = contactBox.QuerySelectorAll<IHtmlSpanElement>("span").Where(div => div.Dataset["qa"] == "company-name").FirstOrDefault()?.Text().Trim();
+            // Location Link
+            var locationObject = ReadJson(fullText, "solarPotential:");
+            if (locationObject != null)
+            {
+                var url = locationObject["linkUrl"].ToString();
+                const string latToken = "lat=";
+                const string lonToken = "lon=";
+                var startIdx = url.IndexOf(latToken) + latToken.Length;
+                var endIdx = url.IndexOf('&', startIdx);
+                var lat = url.Substring(startIdx, endIdx-startIdx);
+                startIdx = url.IndexOf(lonToken) + lonToken.Length;
+                endIdx = url.IndexOf('&', startIdx);
+                var lon = url.Substring(startIdx, endIdx - startIdx);
+                data.LocationUrl = $"https://www.google.com/maps/search/{lat},{lon}";
+            }
+
+            // broker
+            var realtorObject = ReadJson(fullText, "\"realtor\":");
+            if(realtorObject != null)
+            {
+                data.Broker = $"{realtorObject["firstName"]} {realtorObject["lastName"]}";
+            }
+            
+            //data.BrokerFirm = contactBox.QuerySelectorAll<IHtmlSpanElement>("span").Where(div => div.Dataset["qa"] == "company-name").FirstOrDefault()?.Text().Trim();
 
             // living size
             data.LivingSize = int.Parse(Regex.Match(detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.ClassList.Contains("is24qa-wohnflaeche")).First().Text().Replace(".", string.Empty).Trim(), @"\d+").Value);
@@ -151,7 +187,7 @@ namespace ImmoReader
             data.Title = detailsDocument.QuerySelectorAll<IHtmlElement>("h1").Where(div => div?.Id == "expose-title").FirstOrDefault()?.Text().Trim();
 
             // Year TODO!
-            if (int.TryParse(Regex.Match(detailsDocument.QuerySelectorAll<IHtmlDetailsElement>("dd").Where(div => div.ClassList.Contains("is24qa-baujahr")).FirstOrDefault()?.Text().Trim() ?? string.Empty, @"\d+").Value, out var year))
+            if (int.TryParse(Regex.Match(detailsDocument.QuerySelectorAll("dd").Where(div => div.ClassList.Contains("is24qa-baujahr")).FirstOrDefault()?.Text().Trim() ?? string.Empty, @"\d+").Value, out var year))
             {
                 data.Year = year;
             }
