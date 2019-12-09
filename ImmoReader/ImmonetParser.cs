@@ -29,12 +29,15 @@
 
         public int GetCount(IDocument document)
         {
+            return 0;
             return int.Parse(
                 Regex.Match(document.QuerySelectorAll<IHtmlSpanElement>("span").Where(span => span.Id == "totalCount").First().Text().Trim(), @"\d+").Value);
         }
 
-        public string Parse(IDocument document, out int count)
+        public Url Parse(IDocument document, out int count)
         {
+            count = 0;
+            return null;
             // Parse all entries
             var elements = document.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.Id?.StartsWith(idPrefix) ?? false);
             Parallel.ForEach(
@@ -55,7 +58,7 @@
             return this.FindNextPage(document);
         }
 
-        private string FindNextPage(IDocument document)
+        private Url FindNextPage(IDocument document)
         {
             var result = document.QuerySelectorAll<IHtmlAnchorElement>("a").Where(anchor => anchor.ClassList.Contains(new[] { "pull-right", "text-right" }))
                 .ToList();
@@ -67,7 +70,7 @@
 
             if (result.Count == 1)
             {
-                return result[0].Href;
+                return new Url(result[0].Href);
             }
 
             throw new ArgumentException("More than one Next page entries found");
@@ -88,7 +91,7 @@
             }
             else
             {
-                data = new ImmoData { Id = id, InitialDate = DateTime.Today };
+                data = new ImmoData { Id = id, FirstSeenDate = DateTime.Today };
             }
 
             // Title, Location and Type
@@ -170,7 +173,7 @@
             var detailsDocument = BrowsingContext.New(AngleSharp.Configuration.Default.WithDefaultLoader()).OpenAsync(detailsUrl).Result;
 
             // Date and price
-            data.LastDate = DateTime.Today;
+            data.LastSeenDate = DateTime.Today;
 
             var priceElement = detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.Id == "priceid_1").FirstOrDefault();
             if (priceElement != null)
@@ -184,17 +187,17 @@
             }
 
             // broker
-            data.Broker = detailsDocument.QuerySelectorAll<IHtmlParagraphElement>("p").Where(div => div?.Id == "bdlName").FirstOrDefault()?.Text().Trim();
+            data.Realtor = detailsDocument.QuerySelectorAll<IHtmlParagraphElement>("p").Where(div => div?.Id == "bdlName").FirstOrDefault()?.Text().Trim();
 
-            data.BrokerFirm = detailsDocument.QuerySelectorAll<IHtmlParagraphElement>("p").Where(div => div?.Id == "bdlFirmname").FirstOrDefault()?.Text()
+            data.RealtorCompany = detailsDocument.QuerySelectorAll<IHtmlParagraphElement>("p").Where(div => div?.Id == "bdlFirmname").FirstOrDefault()?.Text()
                 .Trim();
 
             // living size
-            data.LivingSize = int.Parse(
+            data.LivingArea = int.Parse(
                 Regex.Match(detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div?.Id == "areaid_1").First().Text().Trim(), @"\d+").Value);
 
             // living size
-            data.GroundSize = int.Parse(
+            data.SiteArea = int.Parse(
                 Regex.Match(detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div?.Id == "areaid_3").First().Text().Trim(), @"\d+").Value);
 
             // room number

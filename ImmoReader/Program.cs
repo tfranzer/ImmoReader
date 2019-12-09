@@ -1,8 +1,11 @@
 ﻿namespace ImmoReader
 {
     using System;
+    using System.Diagnostics;
     using System.IO;
     using System.Threading.Tasks;
+
+    using AngleSharp;
 
     using Newtonsoft.Json;
 
@@ -10,8 +13,6 @@
     {
         private static void Main(string[] args)
         {
-            // Trace.Listeners.Add(new ConsoleTraceListener());
-
             var config = JsonConvert.DeserializeObject<Configuration>(
                 File.ReadAllText(Path.Combine(Environment.CurrentDirectory, @"..\..\..\Misc\config.json")));
             var dataPath = new DirectoryInfo(config.DataPath).FullName;
@@ -20,15 +21,16 @@
                 config.EntryPages,
                 entry =>
                     {
-                        var reader = new HtmlReader(dataPath, entry.Key);
+                        var (immoPageType, urls) = entry;
+                        var reader = new HtmlReader(dataPath, immoPageType);
 
                         Parallel.ForEach(
-                            entry.Value,
+                            urls,
                             url =>
                                 {
                                     try
                                     {
-                                        reader.Read(url).Wait();
+                                        reader.Read(new Url(url));
                                     }
                                     catch (Exception e)
                                     {

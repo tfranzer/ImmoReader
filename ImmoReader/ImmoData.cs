@@ -9,21 +9,23 @@
 
         public string ImageFileName { get; set; }
 
-        public DateTime InitialDate { get; set; }
+        public DateTime? OnlineSince { get; set; }
 
-        public DateTime LastDate { get; set; }
+        public DateTime? FirstSeenDate { get; set; }
+
+        public DateTime? LastSeenDate { get; set; }
 
         public int? InitialPrice { get; set; }
 
         public int? LastPrice { get; set; }
 
-        public string Broker { get; set; }
+        public string Realtor { get; set; }
 
-        public string BrokerFirm { get; set; }
+        public string RealtorCompany { get; set; }
 
-        public int LivingSize { get; set; }
+        public int LivingArea { get; set; }
 
-        public int GroundSize { get; set; }
+        public int SiteArea { get; set; }
 
         public int? RoomCount { get; set; }
 
