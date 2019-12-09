@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ImmoReader
+﻿namespace ImmoReader
 {
+    using System;
+    using System.Collections.Generic;
+
     public class ImmoData
     {
         public string Id { get; set; }

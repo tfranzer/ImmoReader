@@ -1,73 +1,82 @@
-﻿using AngleSharp;
-using AngleSharp.Dom;
-using AngleSharp.Html.Dom;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-
-namespace ImmoReader
+﻿namespace ImmoReader
 {
-    class Immoscout24Parser : IParser
+    using System;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
+
+    using AngleSharp;
+    using AngleSharp.Dom;
+    using AngleSharp.Html.Dom;
+
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
+
+    internal class Immoscout24Parser : IParser
     {
-        private string dataPath;
-        public string Type => ImmoPageType.Immoscout24.ToString();
+        private readonly string dataPath;
+
         internal Immoscout24Parser(string dataPath)
         {
             this.dataPath = dataPath;
         }
 
+        public string Type => ImmoPageType.Immoscout24.ToString();
+
         public int GetCount(IDocument document)
         {
-            return int.Parse(Regex.Match(document.QuerySelectorAll<IHtmlSpanElement>("span").Where(span => span.Dataset["is24-qa"] == "resultlist-resultCount").First().Text().Trim(), @"\d+").Value);
+            return int.Parse(
+                Regex.Match(
+                    document.QuerySelectorAll<IHtmlSpanElement>("span").Where(span => span.Dataset["is24-qa"] == "resultlist-resultCount").First().Text()
+                        .Trim(),
+                    @"\d+").Value);
         }
 
         public string Parse(IDocument document, out int count)
         {
             // Parse all entries
             var elements = document.QuerySelectorAll<IHtmlListItemElement>("li").Where(div => div.ClassList.Contains("result-list__listing"));
-            Parallel.ForEach(elements, element => {
-                try
-                {
-                    ParseObject(element);
-                }
-                catch
-                {
-                    Console.WriteLine($"Failed to parse {element.Dataset["id"]}");
-                }
-
-
-            });
+            Parallel.ForEach(
+                elements,
+                element =>
+                    {
+                        try
+                        {
+                            this.ParseObject(element);
+                        }
+                        catch
+                        {
+                            Console.WriteLine($"Failed to parse {element.Dataset["id"]}");
+                        }
+                    });
 
             count = elements.Count();
-            return FindNextPage(document);
+            return this.FindNextPage(document);
         }
 
         private string FindNextPage(IDocument document)
         {
             var result = document.QuerySelectorAll<IHtmlAnchorElement>("a").Where(anchor => anchor.Dataset["nav-next-page"] == "true").ToList();
 
-            
-            if (result.Count == 0) { return null; }
+            if (result.Count == 0)
+            {
+                return null;
+            }
+
             if (result.Count == 1)
             {
                 return result[0].Href;
             }
 
             throw new ArgumentException("More than one Next page entries found");
-
         }
 
         private void ParseObject(IHtmlListItemElement element)
         {
             var id = element.Dataset["id"];
-            var idPath = Path.Combine(dataPath, id);
+            var idPath = Path.Combine(this.dataPath, id);
             Directory.CreateDirectory(idPath);
 
             var idFilePath = Path.Combine(idPath, $"{id}.json");
@@ -84,13 +93,13 @@ namespace ImmoReader
 
             // get details url
             var detailsElement = element.QuerySelectorAll<IHtmlAnchorElement>("a").Where(anchor => anchor.Dataset["go-to-expose-id"] == id).First();
-            
+
             Console.WriteLine($"Reading {detailsElement.Href}");
 
             // get image url
             try
             {
-                data.ImageFileName = LoadImage(new Uri(detailsElement.QuerySelector<IHtmlImageElement>("img").Dataset["lazy-src"]), idPath);
+                data.ImageFileName = this.LoadImage(new Uri(detailsElement.QuerySelector<IHtmlImageElement>("img").Dataset["lazy-src"]), idPath);
             }
             catch (Exception)
             {
@@ -98,11 +107,10 @@ namespace ImmoReader
             }
 
             // get details from details page
-            ParseDetails(detailsElement.Href, data);
+            this.ParseDetails(detailsElement.Href, data);
 
             // save data
             File.WriteAllText(idFilePath, JsonConvert.SerializeObject(data, Formatting.Indented));
-
         }
 
         private JObject ReadJson(string content, string token)
@@ -118,8 +126,8 @@ namespace ImmoReader
             {
                 return null;
             }
-            
         }
+
         private void ParseDetails(string detailsUrl, ImmoData data)
         {
             data.Url = detailsUrl;
@@ -129,7 +137,8 @@ namespace ImmoReader
             // Date and price
             data.LastDate = DateTime.Today;
 
-            var priceElement = detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.ClassList.Contains("is24qa-kaufpreis")).FirstOrDefault();
+            var priceElement = detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.ClassList.Contains("is24qa-kaufpreis"))
+                .FirstOrDefault();
             if (priceElement != null)
             {
                 data.LastPrice = int.Parse(Regex.Match(priceElement.Text().Replace(".", string.Empty), @"\d+").Value);
@@ -146,7 +155,7 @@ namespace ImmoReader
             var fullText = detailsDocument.All[0].Text();
 
             // Location Link
-            var locationObject = ReadJson(fullText, "solarPotential:");
+            var locationObject = this.ReadJson(fullText, "solarPotential:");
             if (locationObject != null)
             {
                 var url = locationObject["linkUrl"].ToString();
@@ -154,7 +163,7 @@ namespace ImmoReader
                 const string lonToken = "lon=";
                 var startIdx = url.IndexOf(latToken) + latToken.Length;
                 var endIdx = url.IndexOf('&', startIdx);
-                var lat = url.Substring(startIdx, endIdx-startIdx);
+                var lat = url.Substring(startIdx, endIdx - startIdx);
                 startIdx = url.IndexOf(lonToken) + lonToken.Length;
                 endIdx = url.IndexOf('&', startIdx);
                 var lon = url.Substring(startIdx, endIdx - startIdx);
@@ -162,20 +171,28 @@ namespace ImmoReader
             }
 
             // broker
-            var realtorObject = ReadJson(fullText, "\"realtor\":");
-            if(realtorObject != null)
+            var realtorObject = this.ReadJson(fullText, "\"realtor\":");
+            if (realtorObject != null)
             {
                 data.Broker = $"{realtorObject["firstName"]} {realtorObject["lastName"]}";
             }
-            
+
             //data.BrokerFirm = contactBox.QuerySelectorAll<IHtmlSpanElement>("span").Where(div => div.Dataset["qa"] == "company-name").FirstOrDefault()?.Text().Trim();
 
             // living size
-            data.LivingSize = int.Parse(Regex.Match(detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.ClassList.Contains("is24qa-wohnflaeche")).First().Text().Replace(".", string.Empty).Trim(), @"\d+").Value);
+            data.LivingSize = int.Parse(
+                Regex.Match(
+                    detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.ClassList.Contains("is24qa-wohnflaeche")).First().Text()
+                        .Replace(".", string.Empty).Trim(),
+                    @"\d+").Value);
 
             // ground size
-            data.GroundSize = int.Parse(Regex.Match(detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.ClassList.Contains("is24qa-grundstueck")).First().Text().Replace(".", string.Empty).Trim(), @"\d+").Value);
-            
+            data.GroundSize = int.Parse(
+                Regex.Match(
+                    detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.ClassList.Contains("is24qa-grundstueck")).First().Text()
+                        .Replace(".", string.Empty).Trim(),
+                    @"\d+").Value);
+
             // room number
             var roomsElement = detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.ClassList.Contains("is24qa-zi")).FirstOrDefault();
             if (roomsElement != null)
@@ -187,36 +204,42 @@ namespace ImmoReader
             data.Title = detailsDocument.QuerySelectorAll<IHtmlElement>("h1").Where(div => div?.Id == "expose-title").FirstOrDefault()?.Text().Trim();
 
             // Year TODO!
-            if (int.TryParse(Regex.Match(detailsDocument.QuerySelectorAll("dd").Where(div => div.ClassList.Contains("is24qa-baujahr")).FirstOrDefault()?.Text().Trim() ?? string.Empty, @"\d+").Value, out var year))
+            if (int.TryParse(
+                Regex.Match(
+                    detailsDocument.QuerySelectorAll("dd").Where(div => div.ClassList.Contains("is24qa-baujahr")).FirstOrDefault()?.Text().Trim()
+                    ?? string.Empty,
+                    @"\d+").Value,
+                out var year))
             {
                 data.Year = year;
             }
 
             // Tags
-            var tagsElement = detailsDocument.QuerySelectorAll<IHtmlDivElement>("div").Where(div => div.ClassList.Contains(new string[] { "criteriagroup" , "boolean-listing" })).FirstOrDefault();
+            var tagsElement = detailsDocument.QuerySelectorAll<IHtmlDivElement>("div")
+                .Where(div => div.ClassList.Contains(new[] { "criteriagroup", "boolean-listing" })).FirstOrDefault();
             if (tagsElement != null)
             {
                 data.Tags = tagsElement.Children.Select(child => child.Text()).ToHashSet();
             }
 
             // Location
-            data.Location = detailsDocument.QuerySelectorAll<IHtmlSpanElement>("span").Where(div => div.ClassList.Contains("zip-region-and-country")).FirstOrDefault()?.Text().Trim();
+            data.Location = detailsDocument.QuerySelectorAll<IHtmlSpanElement>("span").Where(div => div.ClassList.Contains("zip-region-and-country"))
+                .FirstOrDefault()?.Text().Trim();
 
             // Type
             data.Type = detailsDocument.QuerySelectorAll("dd").Where(div => div.ClassList.Contains("is24qa-typ")).FirstOrDefault()?.Text().Trim();
-
         }
 
         private string LoadImage(Uri imageUrl, string dataPath)
         {
-            var fileName = imageUrl.Segments[2].Replace("/",string.Empty);
+            var fileName = imageUrl.Segments[2].Replace("/", string.Empty);
             var imagePath = Path.Combine(dataPath, fileName);
 
             if (!File.Exists(imagePath))
             {
-                HttpWebRequest httpWebRequest = (HttpWebRequest)HttpWebRequest.Create(imageUrl);
-                HttpWebResponse httpWebReponse = (HttpWebResponse)httpWebRequest.GetResponse();
-                using (Stream stream = httpWebReponse.GetResponseStream())
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(imageUrl);
+                var httpWebReponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var stream = httpWebReponse.GetResponseStream())
 
                 using (var fileStream = File.Create(imagePath))
                 {

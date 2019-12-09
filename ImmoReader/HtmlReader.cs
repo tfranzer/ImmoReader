@@ -1,26 +1,26 @@
-﻿using AngleSharp;
-using AngleSharp.Html.Parser;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ImmoReader
+﻿namespace ImmoReader
 {
-    class HtmlReader
+    using System;
+    using System.IO;
+    using System.Threading.Tasks;
+
+    using AngleSharp;
+    using AngleSharp.Html.Parser;
+
+    internal class HtmlReader
     {
-        private string dataPath;
-        private IParser parser;
-        
-        HtmlParser htmlParser = new HtmlParser();
+        private readonly string dataPath;
+
+        private readonly IParser parser;
+
+        private HtmlParser htmlParser = new HtmlParser();
+
         internal HtmlReader(string dataPath, ImmoPageType immoPageType)
         {
             this.dataPath = Path.Combine(dataPath, immoPageType.ToString());
             Directory.CreateDirectory(this.dataPath);
 
-            switch(immoPageType)
+            switch (immoPageType)
             {
                 case ImmoPageType.Immonet:
                     this.parser = new ImmonetParser(this.dataPath);
@@ -35,14 +35,16 @@ namespace ImmoReader
 
         internal async Task Read(string url)
         {
-            if(string.IsNullOrEmpty(url))
-            { return; }
+            if (string.IsNullOrEmpty(url))
+            {
+                return;
+            }
 
             var document = await BrowsingContext.New(AngleSharp.Configuration.Default.WithDefaultLoader()).OpenAsync(url);
             var totalCount = this.parser.GetCount(document);
             var readCount = 0;
 
-            Console.WriteLine($"Reading ~{totalCount} objects for {parser.Type}");
+            Console.WriteLine($"Reading ~{totalCount} objects for {this.parser.Type}");
             while (readCount < totalCount)
             {
                 url = this.parser.Parse(document, out var count);
@@ -55,7 +57,6 @@ namespace ImmoReader
 
                 document = await BrowsingContext.New(AngleSharp.Configuration.Default.WithDefaultLoader()).OpenAsync(url);
             }
-            
         }
     }
 }

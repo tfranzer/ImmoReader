@@ -1,17 +1,13 @@
-﻿using AngleSharp.Dom;
-using AngleSharp.Html.Dom;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ImmoReader
+﻿namespace ImmoReader
 {
-    interface IParser
+    using AngleSharp.Dom;
+
+    internal interface IParser
     {
+        string Type { get; }
+
         string Parse(IDocument document, out int count);
 
         int GetCount(IDocument document);
-
-        string Type { get; }
     }
 }

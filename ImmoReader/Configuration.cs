@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ImmoReader
+﻿namespace ImmoReader
 {
+    using System.Collections.Generic;
+
     public enum ImmoPageType
     {
         Immoscout24,
+
         Immonet
     }
 
