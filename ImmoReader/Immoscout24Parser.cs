@@ -23,7 +23,7 @@
 
         public int GetCount(IDocument document)
         {
-            return document.Get("span", span => span.Dataset["is24-qa"] == "resultlist-resultCount").First().Text().ParseToInt();
+            return document.Get("span", span => span.Dataset["is24-qa"] == "resultlist-resultCount").First().Text().ParseToInt().GetValueOrDefault(0);
         }
 
         public Url Parse(IDocument document, out int count)
@@ -198,9 +198,9 @@
                 }
                 catch
                 {
-                    
+                    // ignored
                 }
-                
+
                 Console.WriteLine($"Reading details for {detailsElement.Href}");
                 data.Url = detailsElement.Href;
                 ParseDetails(new Url(detailsElement.Href), data);

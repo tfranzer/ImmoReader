@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.IO;
     using System.Linq;
     using System.Net;
@@ -33,9 +32,24 @@
             return document.QuerySelectorAll<T>(selector).Where(filterFunc.Invoke).ToList();
         }
 
-        internal static int ParseToInt(this string text)
+        internal static int? ParseToInt(this string text, bool removeDots = true)
         {
-            return int.Parse(Regex.Match(text.Replace(".", string.Empty).Trim(), @"\d+").Value);
+            if (string.IsNullOrEmpty(text))
+            {
+                return null;
+            }
+
+            if (removeDots)
+            {
+                text = text.Replace(".", string.Empty);
+            }
+
+            if(int.TryParse(Regex.Match(text.Trim(), @"\d+").Value, out var value))
+            {
+                return value;
+            }
+
+            return null;
         }
 
         internal static ImmoData GetImmoData(string folder, string id)

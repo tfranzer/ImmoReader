@@ -1,7 +1,6 @@
 ﻿namespace ImmoReader
 {
     using System;
-    using System.Diagnostics;
     using System.IO;
     using System.Threading.Tasks;
 
@@ -11,7 +10,7 @@
 
     internal class Program
     {
-        private static void Main(string[] args)
+        private static void Main()
         {
             var config = JsonConvert.DeserializeObject<Configuration>(
                 File.ReadAllText(Path.Combine(Environment.CurrentDirectory, @"..\..\..\Misc\config.json")));

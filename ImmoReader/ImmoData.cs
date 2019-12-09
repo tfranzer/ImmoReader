@@ -23,9 +23,9 @@
 
         public string RealtorCompany { get; set; }
 
-        public int LivingArea { get; set; }
+        public int? LivingArea { get; set; }
 
-        public int SiteArea { get; set; }
+        public int? SiteArea { get; set; }
 
         public int? RoomCount { get; set; }
 
