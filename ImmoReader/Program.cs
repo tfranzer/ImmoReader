@@ -10,10 +10,10 @@
 
     internal class Program
     {
-        private static void Main()
+        private static void Main(string[] args)
         {
-            var config = JsonConvert.DeserializeObject<Configuration>(
-                File.ReadAllText(Path.Combine(Environment.CurrentDirectory, @"..\..\..\Misc\config.json")));
+            var configPath = new DirectoryInfo(args.Length == 1 ? args[0] : @"..\..\..\Misc\config.json");
+            var config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(configPath.FullName));
             var dataPath = new DirectoryInfo(config.DataPath).FullName;
 
             Parallel.ForEach(

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ImmoReader": {
+      "commandName": "Project",
+      "commandLineArgs": "..\\..\\..\\Misc\\config..json"
+    }
+  }
+}

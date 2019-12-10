@@ -1,0 +1,7 @@
+{
+  "EntryPages": {
+    "Immoscout24": [ "https://www.immobilienscout24.de/Suche/radius/haus-kaufen?centerofsearchaddress=Karlsruhe%20(Kreis);;;;;Ettlingen&geocoordinates=48.94299;8.40933;15.0&enteredFrom=result_list", "https://www.immobilienscout24.de/Suche/shape/haus-kaufen?shape=cW50aUhlZW1xQHplQmVQaGFBZ2xBfm1BaWFAclx5Z0BifEF3ZkZsaEFrZEVwbEFhaE15WW90S2l5RHRJe2dAZXdCa2dCfWdBZWhEc3RAd2xFd0lvc0F2WHd_QWV9QGVhQXBlQH1WdlhhVGRoQmpAZmlIaHdCeG1PfGFBZmxHfHtBcH5HcHFDamZE&price=-1500000.0&livingspace=120.0-&sorting=2" ],
+    "Immonet": [ "https://www.immonet.de/immobiliensuche/sel.do?pageoffset=1&listsize=26&objecttype=1&locationname=Ettlingen&acid=&actype=&city=102182&ajaxIsRadiusActive=true&sortby=19&suchart=2&radius=15&pcatmtypes=2_1&pCatMTypeStoragefield=&parentcat=2&marketingtype=1&fromprice=&toprice=&fromarea=120&toarea=&fromplotarea=&toplotarea=&fromrooms=&torooms=&objectcat=-1&wbs=-1&fromyear=&toyear=&fulltext=&absenden=Ergebnisse+anzeigen" ]
+  },
+  "DataPath": "C:\\Users\\Torsten\\Google Drive\\Hauskauf"
+}
