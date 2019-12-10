@@ -55,24 +55,24 @@
 
                 cmd.CommandText = @"CREATE TABLE if not exists houses("+
                         "id TEXT PRIMARY KEY,"+
-                        "image TEXT,"+
+                        "location TEXT," +
+                        "distance REAL," +
+                        "price INT," +
+                        "initalprice INT," +
                         "onlinesince TEXT,"+
                         "firstseen TEXT,"+
                         "lastseen TEXT,"+
-                        "initalprice INT,"+
-                        "price INT,"+
-                        "realtor TEXT,"+
+                        "type TEXT," +
+                        "title TEXT," +
+                        "livingarea INT," +
+                        "sitearea INT," +
+                        "rooms INT," +
+                        "year INT," +
+                        "realtor TEXT," +
                         "realtorcompany TEXT,"+
-                        "livingarea INT,"+
-                        "sitearea INT,"+
-                        "rooms INT,"+
-                        "year INT,"+
-                        "distance REAL,"+
-                        "location TEXT,"+
-                        "type TEXT,"+
-                        "title TEXT,"+
                         "url TEXT,"+
                         "locationurl TEXT,"+
+                        "image TEXT," +
                         "tags TEXT)";
                 cmd.ExecuteNonQuery();
             }

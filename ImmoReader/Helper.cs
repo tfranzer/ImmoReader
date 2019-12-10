@@ -74,24 +74,24 @@
             {
                 cmd.CommandText = "INSERT OR REPLACE INTO houses Values(" +
                     "@id," +
-                    "@image," +
+                    "@location," +
+                    "@distance," +
+                    "@price," +
+                    "@initalprice," +
                     "@onlinesince," +
                     "@firstseen," +
                     "@lastseen," +
-                    "@initalprice," +
-                    "@price," +
-                    "@realtor," +
-                    "@realtorcompany," +
+                    "@type," +
+                    "@title," +
                     "@livingarea," +
                     "@sitearea," +
                     "@rooms," +
                     "@year," +
-                    "@distance," +
-                    "@location," +
-                    "@type," +
-                    "@title," +
+                    "@realtor," +
+                    "@realtorcompany," +
                     "@url," +
                     "@locationurl," +
+                    "@image," +
                     "@tags)";
                     
 
