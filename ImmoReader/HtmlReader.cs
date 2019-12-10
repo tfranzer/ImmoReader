@@ -11,9 +11,6 @@
 
         internal HtmlReader(string dataPath, ImmoPageType immoPageType)
         {
-            dataPath = Path.Combine(dataPath, immoPageType.ToString());
-            Directory.CreateDirectory(dataPath);
-
             switch (immoPageType)
             {
                 case ImmoPageType.Immonet:

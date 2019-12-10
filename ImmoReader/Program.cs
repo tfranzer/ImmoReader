@@ -1,6 +1,7 @@
 ﻿namespace ImmoReader
 {
     using System;
+    using System.Data.SQLite;
     using System.IO;
     using System.Threading.Tasks;
 
@@ -16,27 +17,68 @@
             var config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(configPath.FullName));
             var dataPath = new DirectoryInfo(config.DataPath).FullName;
 
-            Parallel.ForEach(
-                config.EntryPages,
-                entry =>
-                    {
-                        var (immoPageType, urls) = entry;
-                        var reader = new HtmlReader(dataPath, immoPageType);
+            using (SQLiteConnection connection = InitDB(dataPath))
+            {
+                Parallel.ForEach(
+                    config.EntryPages,
+                    entry =>
+                        {
+                            var (immoPageType, urls) = entry;
+                            var reader = new HtmlReader(dataPath, immoPageType);
 
-                        Parallel.ForEach(
-                            urls,
-                            url =>
-                                {
-                                    try
+                            Parallel.ForEach(
+                                urls,
+                                url =>
                                     {
-                                        reader.Read(new Url(url));
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Console.WriteLine(e);
-                                    }
-                                });
-                    });
+                                        try
+                                        {
+                                            reader.Read(new Url(url));
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.WriteLine(e);
+                                        }
+                                    });
+                        });
+            }
+        }
+
+        private static SQLiteConnection InitDB(string dataPath)
+        {
+            var con = new SQLiteConnection($@"URI=file:{Path.Combine(dataPath, "data.db")}");
+            con.Open();
+
+            using (var cmd = new SQLiteCommand(con))
+            {
+                //cmd.CommandText = "DROP TABLE IF EXISTS houses";
+                //cmd.ExecuteNonQuery();
+
+                cmd.CommandText = @"CREATE TABLE if not exists houses("+
+                        "id TEXT PRIMARY KEY,"+
+                        "image TEXT,"+
+                        "onlinesince TEXT,"+
+                        "firstseen TEXT,"+
+                        "lastseen TEXT,"+
+                        "initalprice INT,"+
+                        "price INT,"+
+                        "realtor TEXT,"+
+                        "realtorcompany TEXT,"+
+                        "livingarea INT,"+
+                        "sitearea INT,"+
+                        "rooms INT,"+
+                        "year INT,"+
+                        "distance REAL,"+
+                        "location TEXT,"+
+                        "type TEXT,"+
+                        "title TEXT,"+
+                        "url TEXT,"+
+                        "locationurl TEXT,"+
+                        "tags TEXT)";
+                cmd.ExecuteNonQuery();
+            }
+
+            Helper.Connection = con;
+            return con;
         }
     }
 }

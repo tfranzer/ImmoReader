@@ -260,5 +260,6 @@ paket-files/
 __pycache__/
 *.pyc
 
-# Data
+# Data & DB Browser
 Data/
+SQLiteDatabaseBrowserPortable/

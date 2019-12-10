@@ -68,9 +68,9 @@
             throw new ArgumentException("More than one Next page entries found");
         }
 
-        private static string LoadImage(Uri imageUrl, string dataPath)
+        private static string LoadImage(Uri imageUrl, string dataPath, string id)
         {
-            var fileName = imageUrl.Segments.Last();
+            var fileName = $"{id}{new FileInfo(imageUrl.Segments.Last()).Extension}";
 
             Helper.LoadImage(imageUrl, Path.Combine(dataPath, fileName));
 
@@ -122,17 +122,16 @@
 
         private void ParseObject(IHtmlElement element)
         {
-            var id = element.Id.Remove(0, idPrefix.Length);
-            var folder = Path.Combine(this.dataPath, id);
-            Directory.CreateDirectory(folder);
-
-            var data = Helper.GetImmoData(folder, id);
+            var objectId = element.Id.Remove(0, idPrefix.Length);
+            var id = $"{this.Type}-{objectId}";
+            
+            var data = Helper.GetImmoData(this.dataPath, id);
             var needDetails = string.IsNullOrEmpty(data.Url);
 
             // Date and price
             data.LastSeenDate = DateTime.Today;
 
-            var priceElement = element.Get("div", div => div.Id == $"selPrice_{id}").FirstOrDefault()?.Children[1];
+            var priceElement = element.Get("div", div => div.Id == $"selPrice_{objectId}").FirstOrDefault()?.Children[1];
             if (priceElement != null)
             {
                 data.LastPrice = priceElement.Text().ParseToInt();
@@ -157,7 +156,7 @@
                 var url = detailsElement.QuerySelector<IHtmlElement>("img")?.Dataset["original"];
                 if (url != null)
                 {
-                    data.ImageFileName = LoadImage(new Uri(url), folder);
+                    data.ImageFileName = LoadImage(new Uri(url), this.dataPath, id);
                 }
             }
             catch (Exception)
@@ -187,7 +186,7 @@
             }
 
             // save data
-            data.Save(folder, id);
+            data.Save(this.dataPath, id);
         }
     }
 }

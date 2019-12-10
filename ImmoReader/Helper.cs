@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Data.SQLite;
     using System.IO;
     using System.Linq;
     using System.Net;
@@ -16,6 +17,7 @@
 
     internal static class Helper
     {
+        internal static SQLiteConnection Connection { get; set; }
         internal static IDocument Open(this Url url)
         {
             return BrowsingContext.New(AngleSharp.Configuration.Default.WithDefaultLoader()).OpenAsync(url).Result;
@@ -66,6 +68,56 @@
         internal static void Save(this ImmoData data, string folder, string id)
         {
             File.WriteAllText(Path.Combine(folder, $"{id}.json"), JsonConvert.SerializeObject(data, Formatting.Indented));
+
+            // write to db
+            using (var cmd = new SQLiteCommand(Helper.Connection))
+            {
+                cmd.CommandText = "INSERT OR REPLACE INTO houses Values(" +
+                    "@id," +
+                    "@image," +
+                    "@onlinesince," +
+                    "@firstseen," +
+                    "@lastseen," +
+                    "@initalprice," +
+                    "@price," +
+                    "@realtor," +
+                    "@realtorcompany," +
+                    "@livingarea," +
+                    "@sitearea," +
+                    "@rooms," +
+                    "@year," +
+                    "@distance," +
+                    "@location," +
+                    "@type," +
+                    "@title," +
+                    "@url," +
+                    "@locationurl," +
+                    "@tags)";
+                    
+
+                cmd.Parameters.Add(new SQLiteParameter("@id", id));
+                cmd.Parameters.Add(new SQLiteParameter("@image", data.ImageFileName));
+                cmd.Parameters.Add(new SQLiteParameter("@onlinesince", data.OnlineSince));
+                cmd.Parameters.Add(new SQLiteParameter("@firstseen", data.FirstSeenDate));
+                cmd.Parameters.Add(new SQLiteParameter("@lastseen", data.LastSeenDate));
+                cmd.Parameters.Add(new SQLiteParameter("@initalprice", data.InitialPrice));
+                cmd.Parameters.Add(new SQLiteParameter("@price", data.LastPrice));
+                cmd.Parameters.Add(new SQLiteParameter("@realtor", data.Realtor));
+                cmd.Parameters.Add(new SQLiteParameter("@realtorcompany", data.RealtorCompany));
+                cmd.Parameters.Add(new SQLiteParameter("@livingarea", data.LivingArea));
+                cmd.Parameters.Add(new SQLiteParameter("@sitearea", data.SiteArea));
+                cmd.Parameters.Add(new SQLiteParameter("@rooms", data.RoomCount));
+                cmd.Parameters.Add(new SQLiteParameter("@year", data.Year));
+                cmd.Parameters.Add(new SQLiteParameter("@distance", data.Distance));
+                cmd.Parameters.Add(new SQLiteParameter("@location", data.Location));
+                cmd.Parameters.Add(new SQLiteParameter("@type", data.Type));
+                cmd.Parameters.Add(new SQLiteParameter("@title", data.Title));
+                cmd.Parameters.Add(new SQLiteParameter("@url", data.Url));
+                cmd.Parameters.Add(new SQLiteParameter("@locationurl", data.LocationUrl));
+                cmd.Parameters.Add(new SQLiteParameter("@tags", string.Join(';', data.Tags ?? Enumerable.Empty<string>())));
+
+                cmd.ExecuteNonQuery();
+            }
         }
 
         internal static JObject ReadJson(string content, string token, string startToken = "{", string endToken = "};")

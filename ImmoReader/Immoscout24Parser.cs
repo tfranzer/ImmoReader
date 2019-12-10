@@ -134,9 +134,9 @@
             data.Type = detailsDocument.Get("dd", div => div.ClassList.Contains("is24qa-typ")).FirstOrDefault()?.Text().Trim();
         }
 
-        private static string LoadImage(Uri imageUrl, string dataPath)
+        private static string LoadImage(Uri imageUrl, string dataPath, string id)
         {
-            var fileName = imageUrl.Segments[2].Replace("/", string.Empty);
+            var fileName = $"{id}{new FileInfo(imageUrl.Segments[2].Replace("/", string.Empty)).Extension}";
 
             Helper.LoadImage(imageUrl, Path.Combine(dataPath, fileName));
 
@@ -145,11 +145,10 @@
 
         private void ParseObject(IHtmlElement element)
         {
-            var id = element.Dataset["id"];
-            var folder = Path.Combine(this.dataPath, id);
-            Directory.CreateDirectory(folder);
-
-            var data = Helper.GetImmoData(folder, id);
+            var objectId = element.Dataset["id"];
+            var id = $"{this.Type}-{objectId}";
+            
+            var data = Helper.GetImmoData(this.dataPath, id);
             var needDetails = string.IsNullOrEmpty(data.Url);
 
             // Date and price
@@ -172,7 +171,7 @@
             }
 
             // get details url
-            var detailsElement = element.Get<IHtmlAnchorElement>("a", anchor => anchor.Dataset["go-to-expose-id"] == id).First();
+            var detailsElement = element.Get<IHtmlAnchorElement>("a", anchor => anchor.Dataset["go-to-expose-id"] == objectId).First();
 
             // get image url
             try
@@ -180,7 +179,7 @@
                 var url = detailsElement.QuerySelector<IHtmlElement>("img").Dataset["lazy-src"];
                 if (url != null)
                 {
-                    data.ImageFileName = LoadImage(new Uri(url), folder);
+                    data.ImageFileName = LoadImage(new Uri(url), this.dataPath, id);
                 }
             }
             catch (Exception)
@@ -207,7 +206,7 @@
             }
 
             // save data
-            data.Save(folder, id);
+            data.Save(this.dataPath, id);
         }
     }
 }
