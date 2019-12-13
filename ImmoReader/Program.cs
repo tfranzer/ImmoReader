@@ -17,7 +17,7 @@
             var config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(configPath.FullName));
             var dataPath = new DirectoryInfo(config.DataPath).FullName;
 
-            using (SQLiteConnection connection = InitDB(dataPath))
+            using (InitDB(dataPath))
             {
                 Parallel.ForEach(
                     config.EntryPages,

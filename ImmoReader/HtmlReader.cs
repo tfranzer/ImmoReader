@@ -1,8 +1,7 @@
 ﻿namespace ImmoReader
 {
     using System;
-    using System.IO;
-
+    
     using AngleSharp;
 
     internal class HtmlReader
