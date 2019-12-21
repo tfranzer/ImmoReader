@@ -19,6 +19,8 @@
 
         public int? LastPrice { get; set; }
 
+        public decimal? PriceDifference { get; set; }
+
         public string Realtor { get; set; }
 
         public string RealtorCompany { get; set; }

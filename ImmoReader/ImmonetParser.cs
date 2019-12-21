@@ -1,6 +1,7 @@
 ﻿namespace ImmoReader
 {
     using System;
+    using System.Diagnostics;
     using System.Globalization;
     using System.IO;
     using System.Linq;
@@ -43,7 +44,7 @@
                         }
                         catch
                         {
-                            Console.WriteLine($"Failed to parse {element.Id.Remove(0, idPrefix.Length)}");
+                            Trace.WriteLine($"Failed to parse {element.Id.Remove(0, idPrefix.Length)}");
                         }
                     });
 
@@ -141,8 +142,10 @@
                     data.InitialPrice = data.LastPrice;
                 }
 
-                if (data.InitialPrice != data.LastPrice)
+                if (data.LastPrice != data.InitialPrice)
                 {
+                    Debug.Assert(data.LastPrice.HasValue && data.InitialPrice.HasValue);
+                    data.PriceDifference = decimal.Round(100u * (data.LastPrice.Value - data.InitialPrice.Value) / data.InitialPrice.Value, 1);
                     needDetails = true;
                 }
             }
@@ -161,7 +164,7 @@
             }
             catch (Exception)
             {
-                Console.WriteLine($"Failed to load image for {id}");
+                Trace.WriteLine($"Failed to load image for {id}");
             }
 
             if (needDetails)
@@ -180,7 +183,7 @@
                 data.Tags = element.Get("span", span => span.ClassList.Contains("tag-element-50")).Select(span => span.Text()).ToHashSet();
 
                 // go to details page
-                Console.WriteLine($"Reading details for {detailsElement.Href}");
+                Trace.WriteLine($"Reading details for {detailsElement.Href}");
                 data.Url = detailsElement.Href;
                 ParseDetails(new Url(detailsElement.Href), data);
             }

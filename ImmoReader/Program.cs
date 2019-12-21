@@ -2,6 +2,7 @@
 {
     using System;
     using System.Data.SQLite;
+    using System.Diagnostics;
     using System.IO;
     using System.Threading.Tasks;
 
@@ -13,6 +14,10 @@
     {
         private static void Main(string[] args)
         {
+            Trace.Listeners.Add(new ConsoleTraceListener());
+            Trace.Listeners.Add(new TextWriterTraceListener("trace.txt"));
+            Trace.AutoFlush = true;
+
             var configPath = new DirectoryInfo(args.Length == 1 ? args[0] : @"..\..\..\Misc\config.json");
             var config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(configPath.FullName));
             var dataPath = new DirectoryInfo(config.DataPath).FullName;
@@ -36,11 +41,12 @@
                                         }
                                         catch (Exception e)
                                         {
-                                            Console.WriteLine(e);
+                                            Trace.WriteLine(e);
                                         }
                                     });
                         });
             }
+                        
         }
 
         private static SQLiteConnection InitDB(string dataPath)
@@ -59,7 +65,8 @@
                         "distance REAL," +
                         "price INT," +
                         "initalprice INT," +
-                        "onlinesince TEXT,"+
+                        "pricediff REAL," +
+                        "onlinesince TEXT," +
                         "firstseen TEXT,"+
                         "lastseen TEXT,"+
                         "type TEXT," +
