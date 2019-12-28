@@ -108,7 +108,7 @@
             }
 
             // site area
-            data.SiteArea = detailsDocument.Get("div", div => div?.Id == "areaid_3").First().Text().ParseToInt(false);
+            data.SiteArea = detailsDocument.Get("div", div => div?.Id == "areaid_3").FirstOrDefault()?.Text().ParseToInt(false);
 
             // room number
             var roomsElement = detailsDocument.Get("div",div => div?.Id == "equipmentid_1").FirstOrDefault();
@@ -135,15 +135,16 @@
             var priceElement = element.Get("div", div => div.Id == $"selPrice_{objectId}").FirstOrDefault()?.Children[1];
             if (priceElement != null)
             {
-                data.LastPrice = priceElement.Text().ParseToInt();
+                var price = priceElement.Text().ParseToInt();
 
                 if (data.InitialPrice == null)
                 {
-                    data.InitialPrice = data.LastPrice;
+                    data.LastPrice = price;
+                    data.InitialPrice = price;
                 }
-
-                if (data.LastPrice != data.InitialPrice)
+                else if (data.LastPrice != data.InitialPrice && data.LastPrice != price)
                 {
+                    data.LastPrice = price;
                     Debug.Assert(data.LastPrice.HasValue && data.InitialPrice.HasValue);
                     data.PriceDifference = decimal.Round(100u * (data.LastPrice.Value - data.InitialPrice.Value) / data.InitialPrice.Value, 1);
                     needDetails = true;

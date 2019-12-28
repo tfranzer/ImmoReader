@@ -158,15 +158,16 @@
             var priceElement = element.Get("dl", div => div.ClassList.Contains("result-list-entry__primary-criterion")).FirstOrDefault()?.Children[0];
             if (priceElement != null)
             {
-                data.LastPrice = priceElement.Text().ParseToInt();
-
+                var price = priceElement.Text().ParseToInt();
+                
                 if (data.InitialPrice == null)
                 {
-                    data.InitialPrice = data.LastPrice;
+                    data.LastPrice = price;
+                    data.InitialPrice = price;
                 }
-
-                if (data.LastPrice != data.InitialPrice)
+                else if (data.LastPrice != data.InitialPrice && data.LastPrice != price)
                 {
+                    data.LastPrice = price;
                     Debug.Assert(data.LastPrice.HasValue && data.InitialPrice.HasValue);
                     data.PriceDifference = decimal.Round(100u * (data.LastPrice.Value - data.InitialPrice.Value) / data.InitialPrice.Value , 1);
                     needDetails = true;
