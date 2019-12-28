@@ -22,6 +22,7 @@
             var config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(configPath.FullName));
             var dataPath = new DirectoryInfo(config.DataPath).FullName;
 
+            Trace.WriteLine($"Started {DateTime.Now}");
             using (SQLiteConnection connection = InitDB(dataPath))
             {
                 Parallel.ForEach(
@@ -46,7 +47,9 @@
                                     });
                         });
             }
-                        
+
+            Trace.WriteLine($"Finished {DateTime.Now}");
+
         }
 
         private static SQLiteConnection InitDB(string dataPath)
