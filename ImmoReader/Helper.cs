@@ -69,6 +69,12 @@
 
         internal static void Save(this ImmoData data, string folder, string id)
         {
+            // don't save dta for Zwangsversteigerung
+            if (data.RealtorCompany?.Contains("Zwangsversteigerung") ?? false)
+            {
+                return;
+            }
+
             File.WriteAllText(Path.Combine(folder, $"{id}.json"), JsonConvert.SerializeObject(data, Formatting.Indented));
 
             // write to db
