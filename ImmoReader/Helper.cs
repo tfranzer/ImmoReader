@@ -57,16 +57,24 @@
         internal static ImmoData GetImmoData(string folder, string id)
         {
             var filePath = Path.Combine(folder, $"{id}.json");
+
+            ImmoData data = null;
             if (File.Exists(filePath))
             {
-                return JsonConvert.DeserializeObject<ImmoData>(File.ReadAllText(filePath));
+                data = JsonConvert.DeserializeObject<ImmoData>(File.ReadAllText(filePath));
             }
 
-            return new ImmoData { Id = id, FirstSeenDate = DateTime.Today };
+            return data ?? new ImmoData { Id = id, FirstSeenDate = DateTime.Today };
         }
 
         internal static void Save(this ImmoData data, string folder, string id)
         {
+            // don't save dta for Zwangsversteigerung
+            if (data.RealtorCompany?.Contains("Zwangsversteigerung") ?? false)
+            {
+                return;
+            }
+
             File.WriteAllText(Path.Combine(folder, $"{id}.json"), JsonConvert.SerializeObject(data, Formatting.Indented));
 
             // write to db
@@ -78,6 +86,7 @@
                     "@distance," +
                     "@price," +
                     "@initalprice," +
+                    "@pricediff," +
                     "@onlinesince," +
                     "@firstseen," +
                     "@lastseen," +
@@ -101,6 +110,7 @@
                 cmd.Parameters.Add(new SQLiteParameter("@firstseen", data.FirstSeenDate));
                 cmd.Parameters.Add(new SQLiteParameter("@lastseen", data.LastSeenDate));
                 cmd.Parameters.Add(new SQLiteParameter("@initalprice", data.InitialPrice));
+                cmd.Parameters.Add(new SQLiteParameter("@pricediff", data.PriceDifference));
                 cmd.Parameters.Add(new SQLiteParameter("@price", data.LastPrice));
                 cmd.Parameters.Add(new SQLiteParameter("@realtor", data.Realtor));
                 cmd.Parameters.Add(new SQLiteParameter("@realtorcompany", data.RealtorCompany));

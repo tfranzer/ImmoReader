@@ -1,7 +1,9 @@
 ﻿namespace ImmoReader
 {
     using System;
-    
+    using System.Diagnostics;
+    using System.IO;
+
     using AngleSharp;
 
     internal class HtmlReader
@@ -29,7 +31,7 @@
             var totalCount = this.parser.GetCount(document);
             var readCount = 0;
 
-            Console.WriteLine($"Reading ~{totalCount} objects for {this.parser.Type}");
+            Trace.WriteLine($"Reading ~{totalCount} objects for {this.parser.Type}");
             while (readCount < totalCount)
             {
                 url = this.parser.Parse(document, out var count);

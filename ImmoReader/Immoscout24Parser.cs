@@ -1,6 +1,7 @@
 ﻿namespace ImmoReader
 {
     using System;
+    using System.Diagnostics;
     using System.Globalization;
     using System.IO;
     using System.Linq;
@@ -40,7 +41,7 @@
                         }
                         catch
                         {
-                            Console.WriteLine($"Failed to parse {element.Dataset["id"]}");
+                            Trace.WriteLine($"Failed to parse {element.Dataset["id"]}");
                         }
                     });
 
@@ -157,15 +158,18 @@
             var priceElement = element.Get("dl", div => div.ClassList.Contains("result-list-entry__primary-criterion")).FirstOrDefault()?.Children[0];
             if (priceElement != null)
             {
-                data.LastPrice = priceElement.Text().ParseToInt();
-
+                var price = priceElement.Text().ParseToInt();
+                
                 if (data.InitialPrice == null)
                 {
-                    data.InitialPrice = data.LastPrice;
+                    data.LastPrice = price;
+                    data.InitialPrice = price;
                 }
-
-                if (data.InitialPrice != data.LastPrice)
+                else if (data.LastPrice != data.InitialPrice && data.LastPrice != price)
                 {
+                    data.LastPrice = price;
+                    Debug.Assert(data.LastPrice.HasValue && data.InitialPrice.HasValue);
+                    data.PriceDifference = decimal.Round(100u * (data.LastPrice.Value - data.InitialPrice.Value) / data.InitialPrice.Value , 1);
                     needDetails = true;
                 }
             }
@@ -176,7 +180,7 @@
             // get image url
             try
             {
-                var url = detailsElement.QuerySelector<IHtmlElement>("img").Dataset["lazy-src"];
+                var url = detailsElement.QuerySelector<IHtmlElement>("img")?.Dataset["lazy-src"];
                 if (url != null)
                 {
                     data.ImageFileName = LoadImage(new Uri(url), this.dataPath, id);
@@ -184,7 +188,7 @@
             }
             catch (Exception)
             {
-                Console.WriteLine($"Failed to load image for {id}");
+                Trace.WriteLine($"Failed to load image for {id}");
             }
 
             if (needDetails)
@@ -200,7 +204,7 @@
                     // ignored
                 }
 
-                Console.WriteLine($"Reading details for {detailsElement.Href}");
+                Trace.WriteLine($"Reading details for {detailsElement.Href}");
                 data.Url = detailsElement.Href;
                 ParseDetails(new Url(detailsElement.Href), data);
             }
