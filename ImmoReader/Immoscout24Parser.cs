@@ -88,6 +88,14 @@
                 data.RealtorCompany = exposeObject["contactData"]["realtorInformation"]["companyName"]?.ToString();
             }
 
+            // don't parse data for Zwangsversteigerung
+            if (data.RealtorCompany?.Contains("Zwangsversteigerung") ?? false)
+            {
+                return;
+            }
+
+            Trace.WriteLine($"Reading details for {data.Url}");
+
             // Location
             var quickCheckObject = Helper.ReadJson(fullText, "IS24.expose.quickCheckConfig =");
             if (quickCheckObject != null)
@@ -204,7 +212,6 @@
                     // ignored
                 }
 
-                Trace.WriteLine($"Reading details for {detailsElement.Href}");
                 data.Url = detailsElement.Href;
                 ParseDetails(new Url(detailsElement.Href), data);
             }

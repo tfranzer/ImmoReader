@@ -69,7 +69,7 @@
 
         internal static void Save(this ImmoData data, string folder, string id)
         {
-            // don't save dta for Zwangsversteigerung
+            // don't save data for Zwangsversteigerung
             if (data.RealtorCompany?.Contains("Zwangsversteigerung") ?? false)
             {
                 return;

@@ -82,6 +82,18 @@
         {
             var detailsDocument = url.Open();
 
+            // broker
+            data.Realtor = detailsDocument.Get("p", div => div?.Id == "bdlName").FirstOrDefault()?.Text().Trim();
+            data.RealtorCompany = detailsDocument.Get("p", div => div?.Id == "bdlFirmname").FirstOrDefault()?.Text().Trim();
+
+            // don't parse data for Zwangsversteigerung
+            if (data.RealtorCompany?.Contains("Zwangsversteigerung") ?? false)
+            {
+                return;
+            }
+
+            Trace.WriteLine($"Reading details for {data.Url}");
+
             // Title
             data.Title = detailsDocument.Title;
 
@@ -95,10 +107,6 @@
                 var lon = locationObject["lng"].ToString();
                 data.LocationUrl = $"https://www.google.com/maps/search/{lat},{lon}";
             }
-
-            // broker
-            data.Realtor = detailsDocument.Get("p",div => div?.Id == "bdlName").FirstOrDefault()?.Text().Trim();
-            data.RealtorCompany = detailsDocument.Get("p",div => div?.Id == "bdlFirmname").FirstOrDefault()?.Text().Trim();
 
             // living area
             var livingAreaElement = detailsDocument.Get("div", div => div?.Id == "areaid_1").FirstOrDefault();
@@ -184,7 +192,6 @@
                 data.Tags = element.Get("span", span => span.ClassList.Contains("tag-element-50")).Select(span => span.Text()).ToHashSet();
 
                 // go to details page
-                Trace.WriteLine($"Reading details for {detailsElement.Href}");
                 data.Url = detailsElement.Href;
                 ParseDetails(new Url(detailsElement.Href), data);
             }
