@@ -173,7 +173,7 @@
                     data.LastPrice = price;
                     data.InitialPrice = price;
                 }
-                else if (data.LastPrice != data.InitialPrice && data.LastPrice != price)
+                else if (data.LastPrice != price)
                 {
                     data.LastPrice = price;
                     Debug.Assert(data.LastPrice.HasValue && data.InitialPrice.HasValue);
