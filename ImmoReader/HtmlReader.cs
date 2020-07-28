@@ -1,6 +1,7 @@
 ﻿namespace ImmoReader
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
 
@@ -25,25 +26,29 @@
             }
         }
 
-        internal void Read(Url url)
+        internal IList<ImmoData> Read(Url url)
         {
             var document = url.Open();
             var totalCount = this.parser.GetCount(document);
             var readCount = 0;
 
+            var allReadData = new List<ImmoData>();
             Trace.WriteLine($"Reading ~{totalCount} objects for {this.parser.Type}");
             while (readCount < totalCount)
             {
-                url = this.parser.Parse(document, out var count);
-                readCount += count;
+                url = this.parser.Parse(document, out var readData);
+                readCount += readData.Count;
+                allReadData.AddRange(readData);
 
                 if (url == null)
                 {
-                    return;
+                    return allReadData;
                 }
 
                 document = url.Open();
             }
+
+            return allReadData;
         }
     }
 }

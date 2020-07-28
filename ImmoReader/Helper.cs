@@ -130,6 +130,53 @@
             }
         }
 
+        internal static void SaveActive(this ImmoData data)
+        {
+            // don't save data for Zwangsversteigerung
+            if (data.RealtorCompany?.Contains("Zwangsversteigerung") ?? false)
+            {
+                return;
+            }
+
+            // write to db
+            using (var cmd = new SQLiteCommand(Helper.Connection))
+            {
+                cmd.CommandText = "INSERT OR REPLACE INTO active_houses Values(" +
+                    "@id," +
+                    "@url," +
+                    "@location," +
+                    "@price," +
+                    "@initalprice," +
+                    "@pricediff," +
+                    "@onlinesince," +
+                    "@firstseen," +
+                    "@title," +
+                    "@livingarea," +
+                    "@sitearea," +
+                    "@year," +
+                    "@comment," +
+                    "@realtorcompany)";
+
+
+                cmd.Parameters.Add(new SQLiteParameter("@id", data.Id));
+                cmd.Parameters.Add(new SQLiteParameter("@url", data.Url));
+                cmd.Parameters.Add(new SQLiteParameter("@location", data.Location));
+                cmd.Parameters.Add(new SQLiteParameter("@price", data.LastPrice));
+                cmd.Parameters.Add(new SQLiteParameter("@initalprice", data.InitialPrice));
+                cmd.Parameters.Add(new SQLiteParameter("@pricediff", data.PriceDifference));
+                cmd.Parameters.Add(new SQLiteParameter("@onlinesince", data.OnlineSince));
+                cmd.Parameters.Add(new SQLiteParameter("@firstseen", data.FirstSeenDate));
+                cmd.Parameters.Add(new SQLiteParameter("@title", data.Title));
+                cmd.Parameters.Add(new SQLiteParameter("@livingarea", data.LivingArea));
+                cmd.Parameters.Add(new SQLiteParameter("@sitearea", data.SiteArea));
+                cmd.Parameters.Add(new SQLiteParameter("@year", data.Year));
+                cmd.Parameters.Add(new SQLiteParameter("@comment", "Test"));
+                cmd.Parameters.Add(new SQLiteParameter("@realtorcompany", data.RealtorCompany));
+                
+                cmd.ExecuteNonQuery();
+            }
+        }
+
         internal static JObject ReadJson(string content, string token, string startToken = "{", string endToken = "};")
         {
             try

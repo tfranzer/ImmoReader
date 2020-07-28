@@ -1,6 +1,8 @@
 ﻿namespace ImmoReader
 {
     using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
@@ -30,17 +32,23 @@
             return document.Get("span", span => span.Id == "totalCount").First().Text().ParseToInt().GetValueOrDefault(0);
         }
 
-        public Url Parse(IDocument document, out int count)
+        public Url Parse(IDocument document, out IList<ImmoData> readData)
         {
             // Parse all entries
             var elements = document.Get("div", div => div.Id?.StartsWith(idPrefix) ?? false);
+            var read = new List<ImmoData>();
             Parallel.ForEach(
                 elements,
                 element =>
                     {
                         try
                         {
-                            this.ParseObject(element);
+                            var data = this.ParseObject(element);
+
+                            lock (this)
+                            {
+                                read.Add(data);
+                            }
                         }
                         catch
                         {
@@ -48,7 +56,7 @@
                         }
                     });
 
-            count = elements.Count();
+            readData = read;
             return FindNextPage(document);
         }
 
@@ -129,7 +137,7 @@
             data.Year = detailsDocument.Get("div", div => div?.Id == "yearbuild").FirstOrDefault()?.Text().ParseToInt();
         }
 
-        private void ParseObject(IHtmlElement element)
+        private ImmoData ParseObject(IHtmlElement element)
         {
             var objectId = element.Id.Remove(0, idPrefix.Length);
             var id = $"{this.Type}-{objectId}";
@@ -198,6 +206,8 @@
 
             // save data
             data.Save(this.dataPath, id);
+
+            return data;
         }
     }
 }

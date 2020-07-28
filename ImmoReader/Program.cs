@@ -1,6 +1,7 @@
 ﻿namespace ImmoReader
 {
     using System;
+    using System.Collections.Generic;
     using System.Data.SQLite;
     using System.Diagnostics;
     using System.IO;
@@ -25,6 +26,8 @@
             Trace.WriteLine($"Started {DateTime.Now}");
             using (SQLiteConnection connection = InitDB(dataPath))
             {
+                var allReadData = new List<ImmoData>();
+
                 Parallel.ForEach(
                     config.EntryPages,
                     entry =>
@@ -38,7 +41,12 @@
                                     {
                                         try
                                         {
-                                            reader.Read(new Url(url));
+                                            var readData = reader.Read(new Url(url));
+
+                                            lock (allReadData)
+                                            {
+                                                allReadData.AddRange(readData);
+                                            }
                                         }
                                         catch (Exception e)
                                         {
@@ -46,6 +54,9 @@
                                         }
                                     });
                         });
+
+                ActiveHousesWriter.Save(allReadData);
+
             }
 
             Trace.WriteLine($"Finished {DateTime.Now}");
@@ -84,6 +95,26 @@
                         "locationurl TEXT,"+
                         "image TEXT," +
                         "tags TEXT)";
+                cmd.ExecuteNonQuery();
+
+                // active table
+                cmd.CommandText = "DROP TABLE IF EXISTS active_houses";
+                cmd.ExecuteNonQuery();
+                cmd.CommandText = @"CREATE TABLE if not exists active_houses(" +
+                        "id TEXT PRIMARY KEY," +
+                        "url TEXT," +
+                        "location TEXT," +
+                        "price INT," +
+                        "initalprice INT," +
+                        "pricediff REAL," +
+                        "onlinesince TEXT," +
+                        "firstseen TEXT," +
+                        "title TEXT," +
+                        "livingarea INT," +
+                        "sitearea INT," +
+                        "year INT," +
+                        "comment TEXT," +
+                        "realtorcompany TEXT)";
                 cmd.ExecuteNonQuery();
             }
 
