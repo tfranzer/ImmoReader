@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Data.SqlClient;
     using System.Data.SQLite;
     using System.IO;
     using System.Linq;
@@ -67,6 +68,35 @@
             return data ?? new ImmoData { Id = id, FirstSeenDate = DateTime.Today };
         }
 
+        internal static (string Id, int Price)[] FindSimilar(int year, int siteAreaMin, int siteAreaMax, int livingAreaMin, int livingAreaMax)
+        {
+            const string sql = "select [id], [initalprice] from [houses] where [year] = @year and [sitearea] between @siteAreaMin and @siteAreaMax and [livingarea] between @livingAreaMin and @livingAreaMax";
+            using var command = new SQLiteCommand(sql, Connection);
+            command.Parameters.Add(new SQLiteParameter("@year", year));
+            command.Parameters.Add(new SQLiteParameter("@siteAreaMin", siteAreaMin));
+            command.Parameters.Add(new SQLiteParameter("@siteAreaMax", siteAreaMax));
+            command.Parameters.Add(new SQLiteParameter("@livingAreaMin", livingAreaMin));
+            command.Parameters.Add(new SQLiteParameter("@livingAreaMax", livingAreaMax));
+
+            var result = new List<(string Id, int Price)>();
+            var reader = command.ExecuteReader();
+            if (reader.HasRows)
+            {
+                while (reader.Read())
+                {
+                    var v1 = reader.GetValue(1);
+                    if (v1 is DBNull)
+                    {
+                        continue;
+                    }
+                    
+                    result.Add((reader.GetString(0), reader.GetInt32(1)));
+                }
+            }
+
+            return result.ToArray();
+        }
+
         internal static void Save(this ImmoData data, string folder, string id)
         {
             // don't save data for Zwangsversteigerung
@@ -130,7 +160,7 @@
             }
         }
 
-        internal static void SaveActive(this ImmoData data)
+        internal static void SaveActive(this ImmoData data, string comment)
         {
             // don't save data for Zwangsversteigerung
             if (data.RealtorCompany?.Contains("Zwangsversteigerung") ?? false)
@@ -170,7 +200,7 @@
                 cmd.Parameters.Add(new SQLiteParameter("@livingarea", data.LivingArea));
                 cmd.Parameters.Add(new SQLiteParameter("@sitearea", data.SiteArea));
                 cmd.Parameters.Add(new SQLiteParameter("@year", data.Year));
-                cmd.Parameters.Add(new SQLiteParameter("@comment", "Test"));
+                cmd.Parameters.Add(new SQLiteParameter("@comment", comment));
                 cmd.Parameters.Add(new SQLiteParameter("@realtorcompany", data.RealtorCompany));
                 
                 cmd.ExecuteNonQuery();
