@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using ImmoReader;
@@ -37,6 +38,11 @@ public static class ActiveHousesWriter
             prices.AddRange(existing.Select(item => item.Price));
             prices.Sort();
 
+            var firstSeen = new List<DateTime> { checkingData.FirstSeenDate.GetValueOrDefault() };
+            firstSeen.AddRange(existing.Select(item => item.FirstSeen));
+            firstSeen.Sort();
+
+            checkingData.FirstSeenDate = firstSeen.First();
             checkingData.InitialPrice = prices.LastOrDefault();
 
             if (checkingData.LastPrice != null && checkingData.InitialPrice != null)

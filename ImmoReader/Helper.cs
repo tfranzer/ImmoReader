@@ -68,9 +68,9 @@
             return data ?? new ImmoData { Id = id, FirstSeenDate = DateTime.Today };
         }
 
-        internal static (string Id, int Price)[] FindSimilar(int year, int siteAreaMin, int siteAreaMax, int livingAreaMin, int livingAreaMax)
+        internal static (string Id, int Price, DateTime FirstSeen)[] FindSimilar(int year, int siteAreaMin, int siteAreaMax, int livingAreaMin, int livingAreaMax)
         {
-            const string sql = "select [id], [initalprice] from [houses] where [year] = @year and [sitearea] between @siteAreaMin and @siteAreaMax and [livingarea] between @livingAreaMin and @livingAreaMax";
+            const string sql = "select [id], [initalprice], [firstseen] from [houses] where [year] = @year and [sitearea] between @siteAreaMin and @siteAreaMax and [livingarea] between @livingAreaMin and @livingAreaMax";
             using var command = new SQLiteCommand(sql, Connection);
             command.Parameters.Add(new SQLiteParameter("@year", year));
             command.Parameters.Add(new SQLiteParameter("@siteAreaMin", siteAreaMin));
@@ -78,7 +78,7 @@
             command.Parameters.Add(new SQLiteParameter("@livingAreaMin", livingAreaMin));
             command.Parameters.Add(new SQLiteParameter("@livingAreaMax", livingAreaMax));
 
-            var result = new List<(string Id, int Price)>();
+            var result = new List<(string Id, int Price, DateTime FirstSeen)>();
             var reader = command.ExecuteReader();
             if (reader.HasRows)
             {
@@ -89,8 +89,9 @@
                     {
                         continue;
                     }
-                    
-                    result.Add((reader.GetString(0), reader.GetInt32(1)));
+
+                    DateTime.TryParse(reader.GetString(2), out var firstSeen);
+                    result.Add((reader.GetString(0), reader.GetInt32(1), firstSeen));
                 }
             }
 
